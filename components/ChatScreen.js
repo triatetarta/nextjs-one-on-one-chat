@@ -1,5 +1,5 @@
 import { useRouter } from 'next/dist/client/router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { auth, db } from '../firebase';
@@ -11,6 +11,7 @@ import TimeAgo from 'timeago-react';
 const ChatScreen = ({ chat, messages }) => {
   const [input, setInput] = useState('');
   const router = useRouter();
+  const endOfMessagesRef = useRef(null);
   const [user] = useAuthState(auth);
   const [messagesSnapshot] = useCollection(
     db
@@ -25,6 +26,13 @@ const ChatScreen = ({ chat, messages }) => {
       .collection('users')
       .where('email', '==', getRecipientEmail(chat.users, user))
   );
+
+  const scrollToBottom = () => {
+    endOfMessagesRef.current.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  };
 
   const showMessages = () => {
     if (messagesSnapshot) {
@@ -64,6 +72,8 @@ const ChatScreen = ({ chat, messages }) => {
     });
 
     setInput('');
+
+    scrollToBottom();
   };
 
   const recipientEmail = getRecipientEmail(chat.users, user);
@@ -99,7 +109,7 @@ const ChatScreen = ({ chat, messages }) => {
       <div className='p-10 bg-indigo-200 min-h-[90vh]'>
         {showMessages()}
 
-        <div>end of message</div>
+        <div className='mb-20' ref={endOfMessagesRef} />
       </div>
 
       <form className='border flex items-center p-2 sticky bottom-0 bg-white z-50'>
